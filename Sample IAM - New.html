@@ -1,0 +1,2326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4 Pics 1 Word Activity Maker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'poppins': ['Poppins', 'sans-serif']
+                    },
+                    colors: {
+                        primary: '#3b82f6',
+                        accent: '#10b981'
+                    },
+                    aspectRatio: {
+                        '16/9': '16 / 9'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        .image-preview {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+        }
+        .letter-box {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .letter-box.filled {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+        }
+        .letter-box.correct {
+            background-color: #dcfce7;
+            border-color: #10b981;
+        }
+        .letter-box.wrong {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            animation: shake 0.5s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .letter-btn {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            background: white;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .letter-btn:hover {
+            border-color: #3b82f6;
+            background-color: #f0f9ff;
+        }
+        .letter-btn:active {
+            transform: scale(0.95);
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+        }
+        .letter-box:active {
+            transform: scale(0.95);
+        }
+        .letter-btn.used {
+            opacity: 0.5;
+            background-color: #f3f4f6;
+            border-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .modal {
+            backdrop-filter: blur(8px);
+        }
+        .tab-active {
+            background-color: white;
+            color: #3b82f6;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .tab-inactive {
+            background-color: transparent;
+            color: #6b7280;
+        }
+        .tab-inactive:hover {
+            background-color: white;
+            color: #3b82f6;
+        }
+        .container-16-9 {
+            max-width: 100vw;
+            max-height: 100vh;
+            aspect-ratio: 16/9;
+        }
+        @media (max-width: 768px) {
+            .letter-box {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+            .letter-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+        
+        /* Confetti Animation */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #f0f;
+            animation: confetti-fall 3s linear infinite;
+            z-index: 1000;
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Custom Scrollbar Styles */
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .scrollbar-thumb-blue-400::-webkit-scrollbar-thumb {
+            background-color: #60a5fa;
+            border-radius: 9999px;
+        }
+        
+        .scrollbar-track-gray-100::-webkit-scrollbar-track {
+            background-color: #f3f4f6;
+            border-radius: 9999px;
+        }
+        
+        .hover\:scrollbar-thumb-blue-500:hover::-webkit-scrollbar-thumb {
+            background-color: #3b82f6;
+        }
+        
+        .scrollbar-thumb-rounded-full::-webkit-scrollbar-thumb {
+            border-radius: 9999px;
+        }
+        
+        .scrollbar-track-rounded-full::-webkit-scrollbar-track {
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 py-2">
+            <div class="flex items-center justify-between">
+                <!-- Logo and Title -->
+                <div class="flex items-center space-x-2">
+                    <div class="bg-blue-100 rounded-lg p-1">
+                        <span class="text-lg">🎯</span>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold text-gray-800">4 Pics 1 Word Maker</h1>
+                        <p class="text-gray-500 text-xs">Create engaging word puzzles</p>
+                    </div>
+                </div>
+                
+                <!-- Tab Navigation -->
+                <nav class="flex bg-gray-100 rounded-lg p-1 gap-1">
+                    <button id="createTab" class="tab-active px-3 py-1.5 rounded-md font-medium transition-all text-sm min-w-[80px] flex items-center justify-center space-x-1">
+                        <span>🛠️</span>
+                        <span>Create</span>
+                    </button>
+                    <button id="playTab" class="tab-inactive px-3 py-1.5 rounded-md font-medium transition-all text-sm min-w-[80px] flex items-center justify-center space-x-1">
+                        <span>🎮</span>
+                        <span>Play</span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="w-full px-2 py-2 h-[calc(100vh-64px)] overflow-hidden">
+        
+        <!-- Create Tab Content -->
+        <div id="createContent" class="h-full">
+            <div class="grid xl:grid-cols-3 lg:grid-cols-2 gap-2 h-full">
+                <!-- Activity Builder -->
+                <div class="xl:col-span-2 lg:col-span-1 bg-white rounded-lg shadow-lg p-3 overflow-y-auto border border-gray-100">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-sm font-bold text-gray-800">🛠️ Activity Builder</h2>
+                    </div>
+
+                    <!-- Activity Title -->
+                    <div class="mb-2">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Activity Title</label>
+                        <input id="gameTitle" type="text" placeholder="Enter your activity title..." 
+                               class="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-primary focus:border-transparent text-xs bg-gray-50 focus:bg-white transition-all">
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="mb-2">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Instructions</label>
+                        <textarea id="activityInstructions" placeholder="Enter instructions for students..." 
+                               class="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-primary focus:border-transparent h-12 resize-none text-xs bg-gray-50 focus:bg-white transition-all"></textarea>
+                    </div>
+
+                    <!-- Current Item -->
+                    <div class="mb-2">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Answer Word</label>
+                        <input id="answerWord" type="text" placeholder="Enter the answer word..." 
+                               class="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-primary focus:border-transparent text-xs bg-gray-50 focus:bg-white transition-all">
+                    </div>
+
+                    <!-- Image Uploads -->
+                    <div class="mb-2">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Upload 4 Pictures</label>
+                        <div class="grid grid-cols-2 gap-1 mb-1">
+                            <div class="space-y-0.5">
+                                <label class="text-xs text-gray-600">Picture 1</label>
+                                <input type="file" id="pic1" accept="image/*" class="w-full text-xs border border-gray-300 rounded-md p-1 bg-gray-50 focus:bg-white transition-all">
+                            </div>
+                            <div class="space-y-0.5">
+                                <label class="text-xs text-gray-600">Picture 2</label>
+                                <input type="file" id="pic2" accept="image/*" class="w-full text-xs border border-gray-300 rounded-md p-1 bg-gray-50 focus:bg-white transition-all">
+                            </div>
+                            <div class="space-y-0.5">
+                                <label class="text-xs text-gray-600">Picture 3</label>
+                                <input type="file" id="pic3" accept="image/*" class="w-full text-xs border border-gray-300 rounded-md p-1 bg-gray-50 focus:bg-white transition-all">
+                            </div>
+                            <div class="space-y-0.5">
+                                <label class="text-xs text-gray-600">Picture 4</label>
+                                <input type="file" id="pic4" accept="image/*" class="w-full text-xs border border-gray-300 rounded-md p-1 bg-gray-50 focus:bg-white transition-all">
+                            </div>
+                        </div>
+                        <!-- Thumbnails -->
+                        <div class="flex gap-1 justify-center">
+                            <div id="preview1" class="hidden">
+                                <img class="w-8 h-8 object-cover rounded-md border border-gray-200" alt="Preview 1">
+                            </div>
+                            <div id="preview2" class="hidden">
+                                <img class="w-8 h-8 object-cover rounded-md border border-gray-200" alt="Preview 2">
+                            </div>
+                            <div id="preview3" class="hidden">
+                                <img class="w-8 h-8 object-cover rounded-md border border-gray-200" alt="Preview 3">
+                            </div>
+                            <div id="preview4" class="hidden">
+                                <img class="w-8 h-8 object-cover rounded-md border border-gray-200" alt="Preview 4">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="grid grid-cols-2 gap-1 mb-2">
+                        <button id="addItemBtn" class="bg-accent text-white px-2 py-1.5 rounded-md font-medium hover:bg-green-600 transition-all text-xs">
+                            ➕ Add Item
+                        </button>
+                        <button id="clearCurrentBtn" class="bg-gray-100 text-gray-700 px-2 py-1.5 rounded-md font-medium hover:bg-gray-200 transition-all text-xs border border-gray-200">
+                            🗑️ Clear
+                        </button>
+                    </div>
+
+                    <!-- Time Challenge & Language Row -->
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <!-- Time Challenge (Optional) -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-xs font-semibold text-gray-700">⏱️ Time Challenge (Optional)</label>
+                                <input type="checkbox" id="enableTimeChallenge" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            </div>
+                            <div id="timeInputs" class="grid grid-cols-2 gap-1 opacity-50 pointer-events-none">
+                                <input type="number" id="timeMinutes" min="0" max="59" value="5" placeholder="Min" class="w-full px-2 py-1 border border-gray-300 rounded-md text-xs bg-gray-50 focus:bg-white transition-all">
+                                <input type="number" id="timeSeconds" min="0" max="59" value="0" placeholder="Sec" class="w-full px-2 py-1 border border-gray-300 rounded-md text-xs bg-gray-50 focus:bg-white transition-all">
+                            </div>
+                        </div>
+
+                        <!-- Language Selection -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">🌐 Language</label>
+                            <div class="grid grid-cols-2 gap-1">
+                                <button id="englishBtn" class="px-1 py-1.5 bg-blue-600 text-white rounded-md text-xs font-medium transition-all">
+                                    🇺🇸 EN
+                                </button>
+                                <button id="filipinoBtn" class="px-1 py-1.5 bg-gray-100 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-200 transition-all border border-gray-200">
+                                    🇵🇭 FIL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-1">
+                        <button id="playCurrentBtn2" class="bg-green-600 text-white px-2 py-1.5 rounded-md font-medium hover:bg-green-700 transition-all text-xs disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>
+                            🎮 Play
+                        </button>
+                        <button id="saveGameBtn" class="bg-primary text-white px-2 py-1.5 rounded-md font-medium hover:bg-blue-600 transition-all text-xs">
+                            💾 Save
+                        </button>
+                        <button id="loadGameBtn" class="bg-orange-600 text-white px-2 py-1.5 rounded-md font-medium hover:bg-orange-700 transition-all text-xs">
+                            📂 Load
+                        </button>
+                        <button id="exportGameBtn" class="bg-purple-600 text-white px-2 py-1.5 rounded-md font-medium hover:bg-purple-700 transition-all text-xs">
+                            📤 Export
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Activity Items Display -->
+                <div class="bg-white rounded-lg shadow-lg p-3 flex flex-col border border-gray-100">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-sm font-bold text-gray-800">📋 Activity Items</h3>
+                    </div>
+                    <div id="gameItemsList" class="space-y-1 flex-1 overflow-y-auto max-h-[28rem] scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-gray-100 hover:scrollbar-thumb-blue-500 scrollbar-thumb-rounded-full scrollbar-track-rounded-full">
+                        <p class="text-gray-500 text-center py-2 text-xs">No items added yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Play Tab Content -->
+        <div id="playContent" class="h-full hidden">
+            <!-- Empty state when no activity is loaded -->
+            <div id="playEmptyState" class="bg-white rounded-lg shadow-lg p-4 h-full flex items-center justify-center border border-gray-100">
+                <div class="text-center max-w-sm">
+                    <div class="text-4xl mb-2">🎮</div>
+                    <h2 class="text-lg font-bold text-gray-800 mb-2">Ready to Play!</h2>
+                    <p class="text-gray-600 mb-3 text-sm">Click "Play Current" from the Create tab to start playing your activity</p>
+                    <p class="text-gray-500 text-xs">Or load a saved activity and then click "Play Current"</p>
+                </div>
+            </div>
+
+            <!-- Activity Player View - Full Screen Layout -->
+            <div id="activityPlayerView" class="bg-white rounded-lg shadow-lg h-full overflow-hidden hidden border border-gray-100 flex flex-col">
+                <!-- Header Section -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-2 border-b border-gray-200 flex-shrink-0">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h2 id="currentActivityTitle" class="text-sm font-bold text-gray-800 mb-0.5"></h2>
+                            <p id="currentActivityInstructions" class="text-gray-600 text-xs"></p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div id="timerDisplay" class="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium hidden">
+                                ⏱️ <span id="timerText">5:00</span>
+                            </div>
+                            <span id="progress" class="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium">Item 1 of 1</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Game Area -->
+                <div class="flex-1 p-3 flex flex-col min-h-0">
+                    <!-- Pictures Section (Top) -->
+                    <div class="mb-2 flex-shrink-0">
+                        <div id="picturesGrid" class="flex gap-3 justify-center max-w-4xl mx-auto"></div>
+                    </div>
+                    
+                    <!-- Game Controls (Bottom) -->
+                    <div class="flex-1 flex flex-col justify-center space-y-2 min-h-0">
+                        <!-- Word Input -->
+                        <div class="text-center">
+                            <h3 id="yourAnswerLabel" class="text-lg font-bold text-gray-700 mb-2">Your Answer:</h3>
+                            <div id="wordInput" class="flex justify-center gap-2 mb-2"></div>
+                        </div>
+                        
+                        <!-- Letter Bank -->
+                        <div class="text-center">
+                            <h3 id="availableLettersLabel" class="text-lg font-semibold text-gray-600 mb-2">Available Letters:</h3>
+                            <div id="letterBank" class="flex flex-wrap justify-center gap-2 mb-2"></div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex justify-center gap-2">
+                            <button id="clearBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium border border-gray-200 transition-all">🗑️ Clear</button>
+                            <button id="checkBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-all">✓ Check</button>
+                            <button id="resetBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium transition-all">🔄 Reset</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer Controls -->
+                <div class="bg-gray-50 p-2 flex justify-between items-center border-t border-gray-200 flex-shrink-0">
+                    <button id="prevBtn" class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all" disabled>← Previous</button>
+                    <div id="result" class="text-center font-medium hidden text-xs"></div>
+                    <button id="nextBtn" class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all" disabled>Next →</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success/Error Modal -->
+    <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-50 modal hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-3 max-w-md w-full mx-4 shadow-lg border border-gray-100">
+            <div id="messageContent" class="text-center">
+                <h3 id="messageTitle" class="text-sm font-bold mb-2 text-gray-800"></h3>
+                <p id="messageText" class="text-gray-600 mb-3 text-xs"></p>
+                <button id="messageOkBtn" class="px-2 py-1.5 bg-primary text-white rounded-md hover:bg-blue-600 transition-all text-xs font-medium">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Saved Activities Modal -->
+    <div id="loadGameModal" class="fixed inset-0 bg-black bg-opacity-50 modal hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-3 max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden shadow-lg border border-gray-100">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-sm font-bold text-gray-800">📂 Load Saved Activity</h3>
+                <button id="closeLoadModalBtn" class="text-gray-500 hover:text-gray-700 text-xl font-light">×</button>
+            </div>
+            <div id="savedGamesList" class="space-y-1 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-gray-100 hover:scrollbar-thumb-blue-500 scrollbar-thumb-rounded-full scrollbar-track-rounded-full">
+                <!-- Saved games will be populated here -->
+            </div>
+            <div class="flex justify-end gap-1 mt-2">
+                <button id="cancelLoadBtn" class="px-2 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-all text-xs font-medium border border-gray-200">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 modal hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-4 max-w-md w-full mx-4 shadow-lg border border-gray-100">
+            <div class="text-center">
+                <!-- Celebration Animation -->
+                <div class="text-4xl mb-2 animate-bounce">🎉</div>
+                <h3 id="successTitle" class="text-lg font-bold text-gray-800 mb-2">${t.activityCompleted}</h3>
+                <p id="successSubtitle" class="text-gray-600 mb-4 text-sm">${t.excellentWork}</p>
+                
+                <!-- Results Section -->
+                <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-3 mb-4 border border-green-200">
+                    <h4 id="resultsTitle" class="text-sm font-semibold text-gray-800 mb-3">${t.yourResults}</h4>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span id="totalQuestionsLabel" class="text-gray-600">${t.totalQuestions}</span>
+                            <span id="totalQuestionsValue" class="font-semibold text-gray-800">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span id="correctAnswersLabel" class="text-gray-600">${t.correctAnswers}</span>
+                            <span id="correctAnswersValue" class="font-semibold text-green-600">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span id="accuracyLabel" class="text-gray-600">${t.accuracy}</span>
+                            <span id="accuracyValue" class="font-semibold text-blue-600">100%</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span id="timeTakenLabel" class="text-gray-600">${t.timeTaken}</span>
+                            <span id="timeTakenValue" class="font-semibold text-purple-600">0:00</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span id="averageTimeLabel" class="text-gray-600">${t.averagePerQuestion}</span>
+                            <span id="averageTimeValue" class="font-semibold text-orange-600">0:00</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex gap-2 justify-center">
+                    <button id="playAgainBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-sm font-medium">
+                        ${t.playAgain}
+                    </button>
+                    <button id="closeSuccessBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium border border-gray-200">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        class FourPicsWordMaker {
+            constructor() {
+                this.games = JSON.parse(localStorage.getItem('fourPicsGames') || '[]');
+                this.currentGameItems = [];
+                this.activeTab = 'create';
+                this.currentPlayingGame = null;
+                this.currentItemIndex = 0;
+                this.currentAnswer = '';
+                this.completedItems = new Set();
+                this.currentLanguage = 'english';
+                this.timeChallenge = false;
+                this.timeLimit = 300; // 5 minutes in seconds
+                this.timer = null;
+                this.timeRemaining = 0;
+                this.correctAnswers = 0;
+                this.gameStartTime = null;
+                this.gameEndTime = null;
+                this.translations = {
+                    english: {
+                        yourAnswer: "Your Answer:",
+                        availableLetters: "Available Letters:",
+                        clear: "🗑️ Clear",
+                        check: "✓ Check",
+                        reset: "🔄 Reset",
+                        previous: "← Previous",
+                        next: "Next →",
+                        alreadyCompleted: "✅ Already completed!",
+                        fillAllLetters: "⚠️ Please fill in all letters!",
+                        correct: "🎉 Correct!",
+                        tryAgain: "❌ Wrong answer!",
+                        congratulations: "🏆 Congratulations! All puzzles completed!",
+                        gameReset: "🔄 Game reset! Start fresh!",
+                        timeUp: "⏰ Time's up!",
+                        completed: "completed",
+                        activityCompleted: "Activity Completed!",
+                        excellentWork: "Great job completing the activity!",
+                        yourResults: "Your Results:",
+                        totalQuestions: "Total Questions:",
+                        correctAnswers: "Correct Answers:",
+                        accuracy: "Accuracy:",
+                        timeTaken: "Time Taken:",
+                        averagePerQuestion: "Average per Question:",
+                        playAgain: "Play Again",
+                        close: "Close",
+                        minute: "minute",
+                        minutes: "minutes",
+                        second: "second",
+                        seconds: "seconds"
+                    },
+                    filipino: {
+                        yourAnswer: "Inyong Sagot:",
+                        availableLetters: "Mga Available na Titik:",
+                        clear: "🗑️ Linisin",
+                        check: "✓ Tignan",
+                        reset: "🔄 Ulitin",
+                        previous: "← Nakaraan",
+                        next: "Susunod →",
+                        alreadyCompleted: "✅ Tapos na!",
+                        fillAllLetters: "⚠️ Punan lahat ng titik!",
+                        correct: "🎉 Tama!",
+                        tryAgain: "❌ Maling sagot!",
+                        congratulations: "🏆 Binabati kita! Lahat ng puzzle ay natapos!",
+                        gameReset: "🔄 Na-reset ang laro! Magsimula ulit!",
+                        timeUp: "⏰ Tapos na ang oras!",
+                        completed: "tapos",
+                        activityCompleted: "Tapos na ang Aktibidad!",
+                        excellentWork: "Magaling! Natapos mo ang aktibidad!",
+                        yourResults: "Inyong mga Resulta:",
+                        totalQuestions: "Kabuuang Tanong:",
+                        correctAnswers: "Tamang Sagot:",
+                        accuracy: "Katumpakan:",
+                        timeTaken: "Oras na Ginugol:",
+                        averagePerQuestion: "Average bawat Tanong:",
+                        playAgain: "Maglaro Ulit",
+                        close: "Isara",
+                        minute: "minuto",
+                        minutes: "minuto",
+                        second: "segundo",
+                        seconds: "segundo"
+                    }
+                };
+                this.loadCurrentActivity();
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.setupFileUploads();
+                this.setupAutoSave();
+                this.updateGameItemsDisplay();
+            }
+
+            setupEventListeners() {
+                // Tab switching
+                document.getElementById('createTab').addEventListener('click', () => this.switchTab('create'));
+                document.getElementById('playTab').addEventListener('click', () => this.switchTab('play'));
+                
+                // Create tab events
+                document.getElementById('addItemBtn').addEventListener('click', () => this.addItem());
+                document.getElementById('clearCurrentBtn').addEventListener('click', () => this.clearCurrentItem());
+                document.getElementById('saveGameBtn').addEventListener('click', () => this.saveGame());
+                document.getElementById('loadGameBtn').addEventListener('click', () => this.showLoadModal());
+                document.getElementById('exportGameBtn').addEventListener('click', () => this.exportGame());
+                document.getElementById('playCurrentBtn2').addEventListener('click', () => this.playCurrentActivity());
+                
+                // Language selection
+                document.getElementById('englishBtn').addEventListener('click', () => this.setLanguage('english'));
+                document.getElementById('filipinoBtn').addEventListener('click', () => this.setLanguage('filipino'));
+                
+                // Time challenge
+                document.getElementById('enableTimeChallenge').addEventListener('change', (e) => {
+                    this.timeChallenge = e.target.checked;
+                    const timeInputs = document.getElementById('timeInputs');
+                    if (this.timeChallenge) {
+                        timeInputs.classList.remove('opacity-50', 'pointer-events-none');
+                    } else {
+                        timeInputs.classList.add('opacity-50', 'pointer-events-none');
+                    }
+                });
+                
+                document.getElementById('timeMinutes').addEventListener('change', () => this.updateTimeLimit());
+                document.getElementById('timeSeconds').addEventListener('change', () => this.updateTimeLimit());
+                
+                // Activity player events
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearAnswer());
+                document.getElementById('checkBtn').addEventListener('click', () => this.checkAnswer());
+                document.getElementById('resetBtn').addEventListener('click', () => this.resetGame());
+                document.getElementById('prevBtn').addEventListener('click', () => this.loadItem(this.currentItemIndex - 1));
+                document.getElementById('nextBtn').addEventListener('click', () => this.loadItem(this.currentItemIndex + 1));
+                
+                // Modal events
+                document.getElementById('messageOkBtn').addEventListener('click', () => this.closeMessage());
+                document.getElementById('closeLoadModalBtn').addEventListener('click', () => this.closeLoadModal());
+                document.getElementById('cancelLoadBtn').addEventListener('click', () => this.closeLoadModal());
+                document.getElementById('playAgainBtn').addEventListener('click', () => this.playAgain());
+                document.getElementById('closeSuccessBtn').addEventListener('click', () => this.closeSuccessModal());
+            }
+
+            switchTab(tab) {
+                this.activeTab = tab;
+                
+                // Update tab buttons
+                const createTab = document.getElementById('createTab');
+                const playTab = document.getElementById('playTab');
+                const createContent = document.getElementById('createContent');
+                const playContent = document.getElementById('playContent');
+                
+                // Reset all tabs to inactive
+                createTab.className = 'tab-inactive px-3 py-1.5 rounded-md font-medium transition-all text-sm min-w-[80px] flex items-center justify-center space-x-1';
+                playTab.className = 'tab-inactive px-3 py-1.5 rounded-md font-medium transition-all text-sm min-w-[80px] flex items-center justify-center space-x-1';
+                
+                // Hide all content
+                createContent.classList.add('hidden');
+                playContent.classList.add('hidden');
+                
+                // Show active tab
+                if (tab === 'create') {
+                    createTab.className = 'tab-active px-3 py-1.5 rounded-md font-medium transition-all text-sm min-w-[80px] flex items-center justify-center space-x-1';
+                    createContent.classList.remove('hidden');
+                } else if (tab === 'play') {
+                    playTab.className = 'tab-active px-3 py-1.5 rounded-md font-medium transition-all text-sm min-w-[80px] flex items-center justify-center space-x-1';
+                    playContent.classList.remove('hidden');
+                }
+            }
+
+            setupFileUploads() {
+                for (let i = 1; i <= 4; i++) {
+                    const fileInput = document.getElementById(`pic${i}`);
+                    fileInput.addEventListener('change', (e) => this.handleFileUpload(e, i));
+                }
+            }
+
+            setupAutoSave() {
+                // Auto-save title and instructions as user types
+                document.getElementById('gameTitle').addEventListener('input', () => this.saveCurrentActivity());
+                document.getElementById('activityInstructions').addEventListener('input', () => this.saveCurrentActivity());
+            }
+
+            handleFileUpload(event, index) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                if (!file.type.startsWith('image/')) {
+                    this.showMessage('❌ Error', 'Please select a valid image file.');
+                    return;
+                }
+
+                const originalSize = (file.size / 1024).toFixed(1);
+                this.compressImage(file, 800, 0.8).then(compressedDataUrl => {
+                    const preview = document.getElementById(`preview${index}`);
+                    const img = preview.querySelector('img');
+                    
+                    img.src = compressedDataUrl;
+                    preview.classList.remove('hidden');
+                    
+                    event.target.dataset.imageData = compressedDataUrl;
+                    
+                    // Compression happens silently in background
+                }).catch(error => {
+                    console.error('Compression failed:', error);
+                    // Fallback to original file
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const preview = document.getElementById(`preview${index}`);
+                        const img = preview.querySelector('img');
+                        
+                        img.src = e.target.result;
+                        preview.classList.remove('hidden');
+                        
+                        event.target.dataset.imageData = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            compressImage(file, maxWidth = 800, quality = 0.8) {
+                return new Promise((resolve, reject) => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    
+                    img.onload = () => {
+                        // Calculate new dimensions
+                        let { width, height } = img;
+                        
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height = (height * maxWidth) / width;
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxWidth) {
+                                width = (width * maxWidth) / height;
+                                height = maxWidth;
+                            }
+                        }
+                        
+                        // Set canvas dimensions
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        // Draw and compress
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Convert to JPEG with quality compression
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                        resolve(compressedDataUrl);
+                    };
+                    
+                    img.onerror = () => reject(new Error('Failed to load image'));
+                    img.src = URL.createObjectURL(file);
+                });
+            }
+
+            addItem() {
+                const answer = document.getElementById('answerWord').value.trim().toUpperCase();
+                if (!answer) {
+                    this.showMessage('❌ Error', 'Please enter an answer word.');
+                    return;
+                }
+
+                const pictures = [];
+                for (let i = 1; i <= 4; i++) {
+                    const fileInput = document.getElementById(`pic${i}`);
+                    const imageData = fileInput.dataset.imageData;
+                    
+                    if (!imageData) {
+                        this.showMessage('❌ Error', `Please upload picture ${i}.`);
+                        return;
+                    }
+                    pictures.push(imageData);
+                }
+
+                const item = {
+                    answer: answer,
+                    pictures: pictures
+                };
+
+                this.currentGameItems.push(item);
+                this.clearCurrentItem();
+                this.updateGameItemsDisplay();
+                this.showMessage('✅ Success', `Item "${answer}" added to activity!`);
+            }
+
+            clearCurrentItem() {
+                document.getElementById('answerWord').value = '';
+                
+                for (let i = 1; i <= 4; i++) {
+                    const fileInput = document.getElementById(`pic${i}`);
+                    const preview = document.getElementById(`preview${i}`);
+                    
+                    fileInput.value = '';
+                    delete fileInput.dataset.imageData;
+                    preview.classList.add('hidden');
+                }
+                this.saveCurrentActivity();
+            }
+
+            saveCurrentActivity() {
+                const currentActivity = {
+                    title: document.getElementById('gameTitle').value,
+                    instructions: document.getElementById('activityInstructions').value,
+                    items: this.currentGameItems
+                };
+                localStorage.setItem('currentActivity', JSON.stringify(currentActivity));
+            }
+
+            loadCurrentActivity() {
+                const saved = localStorage.getItem('currentActivity');
+                if (saved) {
+                    const activity = JSON.parse(saved);
+                    document.getElementById('gameTitle').value = activity.title || '';
+                    document.getElementById('activityInstructions').value = activity.instructions || '';
+                    this.currentGameItems = activity.items || [];
+                }
+            }
+
+            setLanguage(language) {
+                this.currentLanguage = language;
+                
+                // Update button styles
+                const englishBtn = document.getElementById('englishBtn');
+                const filipinoBtn = document.getElementById('filipinoBtn');
+                
+                if (language === 'english') {
+                    englishBtn.className = 'px-1 py-1.5 bg-blue-600 text-white rounded-md text-xs font-medium transition-all';
+                    filipinoBtn.className = 'px-1 py-1.5 bg-gray-100 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-200 transition-all border border-gray-200';
+                } else {
+                    englishBtn.className = 'px-1 py-1.5 bg-gray-100 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-200 transition-all border border-gray-200';
+                    filipinoBtn.className = 'px-1 py-1.5 bg-blue-600 text-white rounded-md text-xs font-medium transition-all';
+                }
+                
+                // Update game interface if playing
+                if (this.currentPlayingGame) {
+                    this.updateGameInterface();
+                }
+            }
+
+            updateTimeLimit() {
+                const minutes = parseInt(document.getElementById('timeMinutes').value) || 0;
+                const seconds = parseInt(document.getElementById('timeSeconds').value) || 0;
+                this.timeLimit = (minutes * 60) + seconds;
+            }
+
+            startTimer() {
+                if (!this.timeChallenge || this.timeLimit <= 0) return;
+                
+                this.timeRemaining = this.timeLimit;
+                document.getElementById('timerDisplay').classList.remove('hidden');
+                this.updateTimerDisplay();
+                
+                this.timer = setInterval(() => {
+                    this.timeRemaining--;
+                    this.updateTimerDisplay();
+                    
+                    if (this.timeRemaining <= 0) {
+                        this.stopTimer();
+                        this.showResult(this.translations[this.currentLanguage].timeUp, 'text-red-600');
+                        // Disable all interactions when time is up
+                        document.querySelectorAll('.letter-btn').forEach(btn => btn.disabled = true);
+                        document.getElementById('checkBtn').disabled = true;
+                    }
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.timer) {
+                    clearInterval(this.timer);
+                    this.timer = null;
+                }
+            }
+
+            updateTimerDisplay() {
+                const minutes = Math.floor(this.timeRemaining / 60);
+                const seconds = this.timeRemaining % 60;
+                document.getElementById('timerText').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Change color when time is running low
+                const timerDisplay = document.getElementById('timerDisplay');
+                if (this.timeRemaining <= 30) {
+                    timerDisplay.className = 'bg-red-200 text-red-800 px-2 py-1 rounded-full text-xs font-medium';
+                } else if (this.timeRemaining <= 60) {
+                    timerDisplay.className = 'bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs font-medium';
+                } else {
+                    timerDisplay.className = 'bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium';
+                }
+            }
+
+            updateGameInterface() {
+                const t = this.translations[this.currentLanguage];
+                
+                // Update game labels
+                const yourAnswerLabel = document.getElementById('yourAnswerLabel');
+                const availableLettersLabel = document.getElementById('availableLettersLabel');
+                
+                if (yourAnswerLabel) yourAnswerLabel.textContent = t.yourAnswer;
+                if (availableLettersLabel) availableLettersLabel.textContent = t.availableLetters;
+                
+                // Update buttons
+                const clearBtn = document.getElementById('clearBtn');
+                const checkBtn = document.getElementById('checkBtn');
+                const resetBtn = document.getElementById('resetBtn');
+                const prevBtn = document.getElementById('prevBtn');
+                const nextBtn = document.getElementById('nextBtn');
+                
+                if (clearBtn) clearBtn.textContent = t.clear;
+                if (checkBtn) checkBtn.textContent = t.check;
+                if (resetBtn) resetBtn.textContent = t.reset;
+                if (prevBtn) prevBtn.textContent = t.previous;
+                if (nextBtn) nextBtn.textContent = t.next;
+            }
+
+            playCurrentActivity() {
+                const title = document.getElementById('gameTitle').value.trim() || 'Current Activity';
+                const instructions = document.getElementById('activityInstructions').value.trim() || 'Look at the four pictures and guess the word they have in common!';
+                
+                if (this.currentGameItems.length === 0) {
+                    this.showMessage('❌ Error', 'Please add at least one item to play.');
+                    return;
+                }
+
+                const tempGame = {
+                    title: title,
+                    instructions: instructions,
+                    items: [...this.currentGameItems],
+                    timeChallenge: this.timeChallenge,
+                    timeLimit: this.timeLimit,
+                    language: this.currentLanguage
+                };
+
+                this.currentPlayingGame = tempGame;
+                this.currentItemIndex = 0;
+                this.currentAnswer = '';
+                this.completedItems = new Set();
+                this.correctAnswers = 0;
+                this.gameStartTime = Date.now();
+                this.gameEndTime = null;
+                
+                this.switchTab('play');
+                this.showActivityPlayer();
+                this.loadItem(0);
+                
+                if (this.timeChallenge) {
+                    this.startTimer();
+                }
+            }
+
+            updateGameItemsDisplay() {
+                const container = document.getElementById('gameItemsList');
+                const playCurrentBtn2 = document.getElementById('playCurrentBtn2');
+                
+                if (this.currentGameItems.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-8">No items added yet</p>';
+                    playCurrentBtn2.disabled = true;
+                    return;
+                }
+
+                playCurrentBtn2.disabled = false;
+                container.innerHTML = this.currentGameItems.map((item, index) => `
+                    <div class="border border-gray-200 rounded-lg p-2 bg-gray-50 hover:bg-gray-100 transition-all">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-medium text-gray-800 text-xs">Item ${index + 1}: ${item.answer}</h4>
+                            <div class="flex gap-1">
+                                <button onclick="app.editItem(${index})" class="text-blue-600 hover:text-blue-800 text-xs font-medium px-1 py-0.5 rounded hover:bg-blue-50 transition-all">
+                                    ✏️ Edit
+                                </button>
+                                <button onclick="app.removeItem(${index})" class="text-red-600 hover:text-red-800 text-xs font-medium px-1 py-0.5 rounded hover:bg-red-50 transition-all">
+                                    🗑️ Remove
+                                </button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-1">
+                            ${item.pictures.map((pic, i) => `
+                                <img src="${pic}" class="w-10 h-10 object-cover rounded border border-gray-200" alt="Pic ${i+1}">
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+                
+                this.saveCurrentActivity();
+            }
+
+            // updatePlayGamesList method removed - no longer needed
+
+            removeItem(index) {
+                this.currentGameItems.splice(index, 1);
+                this.updateGameItemsDisplay();
+                this.showMessage('🗑️ Removed', 'Item removed from activity.');
+            }
+
+            editItem(index) {
+                const item = this.currentGameItems[index];
+                
+                // Load item data into form
+                document.getElementById('answerWord').value = item.answer;
+                
+                // Load images
+                for (let i = 1; i <= 4; i++) {
+                    const fileInput = document.getElementById(`pic${i}`);
+                    const preview = document.getElementById(`preview${i}`);
+                    const img = preview.querySelector('img');
+                    
+                    fileInput.dataset.imageData = item.pictures[i-1];
+                    img.src = item.pictures[i-1];
+                    preview.classList.remove('hidden');
+                }
+                
+                // Remove item from list (will be re-added when user clicks Add Item)
+                this.currentGameItems.splice(index, 1);
+                this.updateGameItemsDisplay();
+                
+                this.showMessage('✏️ Edit Mode', 'Item loaded for editing. Make changes and click "Add Item" to save.');
+            }
+
+            showLoadModal() {
+                this.updateSavedGamesList();
+                document.getElementById('loadGameModal').classList.remove('hidden');
+                document.getElementById('loadGameModal').classList.add('flex');
+            }
+
+            closeLoadModal() {
+                document.getElementById('loadGameModal').classList.add('hidden');
+                document.getElementById('loadGameModal').classList.remove('flex');
+            }
+
+            updateSavedGamesList() {
+                const container = document.getElementById('savedGamesList');
+                
+                if (this.games.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-2 text-xs">No saved activities yet</p>';
+                    return;
+                }
+
+                container.innerHTML = this.games.map(game => `
+                    <div class="border border-gray-200 rounded-lg p-2 hover:bg-gray-50 transition-all bg-white">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h4 class="font-medium text-gray-800 mb-1 text-xs">${game.title}</h4>
+                                <p class="text-gray-600 mb-1 text-xs">${game.items.length} items • ${game.created}</p>
+                                ${game.instructions ? `<p class="text-xs text-gray-500 italic">"${game.instructions.substring(0, 40)}${game.instructions.length > 40 ? '...' : ''}"</p>` : ''}
+                            </div>
+                            <div class="flex gap-1 ml-2">
+                                <button onclick="app.playFromModal(${game.id})" class="px-2 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all text-xs font-medium">
+                                    📂 Load
+                                </button>
+                                <button onclick="app.deleteSavedGame(${game.id})" class="px-2 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all text-xs font-medium">
+                                    🗑️ Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            loadSavedGame(gameId) {
+                const game = this.games.find(g => g.id === gameId);
+                if (!game) return;
+
+                // Load game data into form
+                document.getElementById('gameTitle').value = game.title;
+                document.getElementById('activityInstructions').value = game.instructions || '';
+                
+                // Load items
+                this.currentGameItems = [...game.items];
+                this.updateGameItemsDisplay();
+                
+                this.closeLoadModal();
+                this.showMessage('📂 Loaded', `Activity "${game.title}" loaded with ${game.items.length} items!`);
+            }
+
+            playFromModal(gameId) {
+                const game = this.games.find(g => g.id === gameId);
+                if (!game) return;
+
+                // Load game data into the current activity builder
+                document.getElementById('gameTitle').value = game.title;
+                document.getElementById('activityInstructions').value = game.instructions || '';
+                
+                // Load items into current activity
+                this.currentGameItems = [...game.items];
+                this.updateGameItemsDisplay();
+                
+                this.closeLoadModal();
+                this.showMessage('📂 Loaded', `Activity "${game.title}" loaded with ${game.items.length} items!`);
+            }
+
+            showActivityPlayer() {
+                document.getElementById('playEmptyState').classList.add('hidden');
+                document.getElementById('activityPlayerView').classList.remove('hidden');
+                
+                if (this.currentPlayingGame) {
+                    document.getElementById('currentActivityTitle').textContent = this.currentPlayingGame.title;
+                    document.getElementById('currentActivityInstructions').textContent = this.currentPlayingGame.instructions || 'Look at the four pictures and guess the word they have in common!';
+                }
+            }
+
+            saveGame() {
+                const title = document.getElementById('gameTitle').value.trim();
+                const instructions = document.getElementById('activityInstructions').value.trim();
+                
+                if (!title) {
+                    this.showMessage('❌ Error', 'Please enter an activity title.');
+                    return;
+                }
+
+                if (this.currentGameItems.length === 0) {
+                    this.showMessage('❌ Error', 'Please add at least one item to the activity.');
+                    return;
+                }
+
+                const game = {
+                    id: Date.now(),
+                    title: title,
+                    instructions: instructions || 'Look at the four pictures and guess the word they have in common!',
+                    items: [...this.currentGameItems],
+                    created: new Date().toLocaleDateString()
+                };
+
+                this.games.push(game);
+                localStorage.setItem('fourPicsGames', JSON.stringify(this.games));
+                
+                document.getElementById('gameTitle').value = '';
+                document.getElementById('activityInstructions').value = '';
+                this.currentGameItems = [];
+                this.updateGameItemsDisplay();
+                
+                this.showMessage('✅ Success', `Activity "${title}" saved with ${game.items.length} items!`);
+            }
+
+            exportGame() {
+                const title = document.getElementById('gameTitle').value.trim();
+                const instructions = document.getElementById('activityInstructions').value.trim();
+                
+                if (!title) {
+                    this.showMessage('❌ Error', 'Please enter an activity title.');
+                    return;
+                }
+
+                if (this.currentGameItems.length === 0) {
+                    this.showMessage('❌ Error', 'Please add at least one item to export.');
+                    return;
+                }
+
+                const gameData = {
+                    title: title,
+                    instructions: instructions || 'Look at the four pictures and guess the word they have in common!',
+                    items: this.currentGameItems,
+                    language: this.currentLanguage,
+                    timeChallenge: this.timeChallenge,
+                    timeLimit: this.timeLimit
+                };
+
+                const html = this.generateGameHTML(gameData);
+                const blob = new Blob([html], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${title.replace(/[^a-z0-9]/gi, '_')}_activity.html`;
+                a.click();
+                
+                URL.revokeObjectURL(url);
+                this.showMessage('📤 Export Complete', `Activity "${title}" has been downloaded!`);
+            }
+
+            playGame(gameId) {
+                const game = this.games.find(g => g.id === gameId);
+                if (!game) return;
+
+                const html = this.generateGameHTML(game);
+                const blob = new Blob([html], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }
+
+            deleteGame(gameId) {
+                if (!confirm('Are you sure you want to delete this activity?')) return;
+                
+                this.games = this.games.filter(g => g.id !== gameId);
+                localStorage.setItem('fourPicsGames', JSON.stringify(this.games));
+                this.showMessage('🗑️ Deleted', 'Activity deleted successfully.');
+            }
+
+            deleteSavedGame(gameId) {
+                const game = this.games.find(g => g.id === gameId);
+                if (!game) return;
+                
+                if (!confirm(`Are you sure you want to delete "${game.title}"?`)) return;
+                
+                this.games = this.games.filter(g => g.id !== gameId);
+                localStorage.setItem('fourPicsGames', JSON.stringify(this.games));
+                this.updateSavedGamesList();
+                this.showMessage('🗑️ Deleted', `Activity "${game.title}" deleted successfully.`);
+            }
+
+            // Activity Player Methods
+            loadItem(index) {
+                if (!this.currentPlayingGame) return;
+                
+                this.currentItemIndex = index;
+                this.currentAnswer = '';
+                const item = this.currentPlayingGame.items[index];
+                
+                document.getElementById('progress').textContent = `Item ${index + 1} of ${this.currentPlayingGame.items.length}`;
+                
+                // Load pictures
+                document.getElementById('picturesGrid').innerHTML = item.pictures.map((pic, i) => `
+                    <div class="w-48 h-48 bg-gray-100 rounded-lg overflow-hidden shadow-lg border-2 border-gray-300">
+                        <img src="${pic}" alt="Picture ${i + 1}" class="w-full h-full object-cover">
+                    </div>
+                `).join('');
+                
+                // Create word input boxes
+                document.getElementById('wordInput').innerHTML = `
+                    <div class="flex justify-center gap-2">
+                        ${Array(item.answer.length).fill(0).map((_, i) => `
+                            <div class="letter-box" data-index="${i}"></div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                // Create letter bank
+                const letters = item.answer.split('').concat(this.generateExtraLetters(6));
+                const shuffledLetters = this.shuffleArray(letters);
+                document.getElementById('letterBank').innerHTML = shuffledLetters.map(letter => `
+                    <button class="letter-btn" data-letter="${letter}">${letter}</button>
+                `).join('');
+                
+                this.bindPlayerEvents();
+                this.updateNavigation();
+                this.updateGameInterface(); // Apply translations
+                
+                // If already completed, show the answer
+                if (this.completedItems.has(index)) {
+                    document.querySelectorAll('.letter-box').forEach((box, i) => {
+                        box.textContent = item.answer[i];
+                        box.classList.add('filled', 'correct');
+                    });
+                    this.currentAnswer = item.answer;
+                }
+            }
+
+            generateExtraLetters(count) {
+                const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                const extras = [];
+                for (let i = 0; i < count; i++) {
+                    extras.push(alphabet[Math.floor(Math.random() * alphabet.length)]);
+                }
+                return extras;
+            }
+
+            shuffleArray(array) {
+                const shuffled = [...array];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
+            }
+
+            bindPlayerEvents() {
+                document.querySelectorAll('.letter-btn').forEach(btn => {
+                    btn.onclick = () => this.addLetter(btn.dataset.letter, btn);
+                    // Add touch support for better mobile experience
+                    btn.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        this.addLetter(btn.dataset.letter, btn);
+                    });
+                });
+                
+                document.querySelectorAll('.letter-box').forEach(box => {
+                    box.onclick = () => this.removeLetter(box);
+                    // Add touch support for better mobile experience
+                    box.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        this.removeLetter(box);
+                    });
+                });
+            }
+
+
+
+            addLetter(letter, btn) {
+                if (this.completedItems.has(this.currentItemIndex)) return;
+                if (btn.classList.contains('used')) return;
+                
+                const emptyBox = document.querySelector('.letter-box:not(.filled)');
+                if (!emptyBox) return;
+                
+                // Add haptic feedback for mobile
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+                
+                // Smooth placement animation
+                emptyBox.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                emptyBox.textContent = letter;
+                emptyBox.classList.add('filled');
+                emptyBox.dataset.letter = letter;
+                
+                // Mark button as used instead of hiding
+                btn.classList.add('used');
+                btn.disabled = true;
+                
+                this.currentAnswer += letter;
+                
+                // Enhanced visual feedback with bounce
+                emptyBox.style.transform = 'scale(1.2)';
+                emptyBox.style.backgroundColor = '#dcfce7';
+                emptyBox.style.borderColor = '#10b981';
+                
+                setTimeout(() => {
+                    emptyBox.style.transform = 'scale(1)';
+                    setTimeout(() => {
+                        emptyBox.style.transition = '';
+                        emptyBox.style.backgroundColor = '';
+                        emptyBox.style.borderColor = '';
+                    }, 300);
+                }, 150);
+            }
+
+            removeLetter(box) {
+                if (this.completedItems.has(this.currentItemIndex) || !box.classList.contains('filled')) return;
+                
+                const letter = box.dataset.letter;
+                
+                // Add haptic feedback for mobile
+                if (navigator.vibrate) {
+                    navigator.vibrate(30);
+                }
+                
+                // Clear the box
+                box.textContent = '';
+                box.classList.remove('filled', 'correct', 'wrong');
+                delete box.dataset.letter;
+                
+                // Re-enable the corresponding button
+                const btn = document.querySelector(`.letter-btn[data-letter="${letter}"].used`);
+                if (btn) {
+                    btn.classList.remove('used');
+                    btn.disabled = false;
+                }
+                
+                this.currentAnswer = this.currentAnswer.replace(letter, '');
+            }
+
+            clearAnswer() {
+                if (this.completedItems.has(this.currentItemIndex)) return;
+                
+                // Re-enable all used buttons
+                document.querySelectorAll('.letter-btn.used').forEach(btn => {
+                    btn.classList.remove('used');
+                    btn.disabled = false;
+                });
+                
+                // Clear all filled boxes
+                document.querySelectorAll('.letter-box.filled').forEach(box => {
+                    box.textContent = '';
+                    box.classList.remove('filled', 'correct', 'wrong');
+                    delete box.dataset.letter;
+                });
+                
+                this.currentAnswer = '';
+            }
+
+            checkAnswer() {
+                const t = this.translations[this.currentLanguage];
+                
+                if (this.completedItems.has(this.currentItemIndex)) {
+                    this.showResult(t.alreadyCompleted, 'text-green-600');
+                    return;
+                }
+                
+                const item = this.currentPlayingGame.items[this.currentItemIndex];
+                
+                if (this.currentAnswer.length !== item.answer.length) {
+                    this.showResult(t.fillAllLetters, 'text-yellow-600');
+                    return;
+                }
+                
+                if (this.currentAnswer === item.answer) {
+                    // Correct answer
+                    document.querySelectorAll('.letter-box').forEach(box => box.classList.add('correct'));
+                    this.completedItems.add(this.currentItemIndex);
+                    this.correctAnswers++;
+                    this.showResult(t.correct, 'text-green-600');
+                    
+                    // Auto-advance after 1.5 seconds
+                    setTimeout(() => {
+                        if (this.currentItemIndex < this.currentPlayingGame.items.length - 1) {
+                            this.loadItem(this.currentItemIndex + 1);
+                        } else {
+                            // All questions completed - show success modal
+                            this.gameEndTime = Date.now();
+                            this.stopTimer();
+                            this.showSuccessModal();
+                        }
+                    }, 1500);
+                } else {
+                    // Wrong answer
+                    document.querySelectorAll('.letter-box').forEach(box => box.classList.add('wrong'));
+                    this.completedItems.add(this.currentItemIndex); // Mark as completed (wrong)
+                    this.showResult(t.tryAgain, 'text-red-600');
+                    
+                    // Auto-advance after 1.5 seconds
+                    setTimeout(() => {
+                        if (this.currentItemIndex < this.currentPlayingGame.items.length - 1) {
+                            this.loadItem(this.currentItemIndex + 1);
+                        } else {
+                            // All questions completed - show success modal
+                            this.gameEndTime = Date.now();
+                            this.stopTimer();
+                            this.showSuccessModal();
+                        }
+                    }, 1500);
+                }
+                
+                this.updateNavigation();
+            }
+
+            updateNavigation() {
+                document.getElementById('prevBtn').disabled = this.currentItemIndex === 0;
+                document.getElementById('nextBtn').disabled = this.currentItemIndex === this.currentPlayingGame.items.length - 1;
+                
+                const progress = document.getElementById('progress');
+                progress.className = this.completedItems.has(this.currentItemIndex) 
+                    ? 'bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm'
+                    : 'bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm';
+            }
+
+            resetGame() {
+                this.completedItems.clear();
+                this.currentItemIndex = 0;
+                this.currentAnswer = '';
+                this.correctAnswers = 0;
+                this.gameStartTime = Date.now();
+                this.gameEndTime = null;
+                this.stopTimer();
+                document.getElementById('timerDisplay').classList.add('hidden');
+                
+                // Re-enable all interactions
+                document.querySelectorAll('.letter-btn').forEach(btn => btn.disabled = false);
+                document.getElementById('checkBtn').disabled = false;
+                
+                this.loadItem(0);
+                
+                if (this.timeChallenge) {
+                    this.startTimer();
+                }
+                
+                const t = this.translations[this.currentLanguage];
+                this.showResult(t.gameReset, 'text-blue-600');
+            }
+
+            showResult(message, className) {
+                const result = document.getElementById('result');
+                result.textContent = message;
+                result.className = `text-center ${className} font-medium`;
+                result.classList.remove('hidden');
+                setTimeout(() => result.classList.add('hidden'), 3000);
+            }
+
+            createConfetti() {
+                const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dda0dd', '#98d8c8', '#f7dc6f'];
+                const confettiCount = 50;
+                
+                for (let i = 0; i < confettiCount; i++) {
+                    setTimeout(() => {
+                        const confetti = document.createElement('div');
+                        confetti.className = 'confetti';
+                        confetti.style.left = Math.random() * 100 + 'vw';
+                        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                        confetti.style.animationDelay = Math.random() * 3 + 's';
+                        confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                        document.body.appendChild(confetti);
+                        
+                        setTimeout(() => {
+                            confetti.remove();
+                        }, 5000);
+                    }, i * 50);
+                }
+            }
+
+            generateGameHTML(gameData) {
+                const language = gameData.language || 'english';
+                const t = this.translations[language];
+                
+                return `<!DOCTYPE html>
+<html lang="${language === 'filipino' ? 'fil' : 'en'}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${gameData.title}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    <\/script>
+    <style>
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        .letter-box {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .letter-box.filled {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+        }
+        .letter-box.correct {
+            background-color: #dcfce7;
+            border-color: #10b981;
+        }
+        .letter-box.wrong {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            animation: shake 0.5s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .letter-btn {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            background: white;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .letter-btn:hover {
+            border-color: #3b82f6;
+            background-color: #f0f9ff;
+        }
+        .letter-btn:active {
+            transform: scale(0.95);
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+        }
+        .letter-box:active {
+            transform: scale(0.95);
+        }
+        .letter-btn.used {
+            opacity: 0.5;
+            background-color: #f3f4f6;
+            border-color: #d1d5db;
+            cursor: not-allowed;
+        }
+        .modal {
+            backdrop-filter: blur(8px);
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scrollbar-thumb-blue-400::-webkit-scrollbar-thumb {
+            background-color: #60a5fa;
+            border-radius: 9999px;
+        }
+        .scrollbar-track-gray-100::-webkit-scrollbar-track {
+            background-color: #f3f4f6;
+            border-radius: 9999px;
+        }
+        @media (max-width: 768px) {
+            .letter-box {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+            .letter-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Activity Player View - Full Screen Layout -->
+    <div class="bg-white rounded-lg shadow-lg h-screen overflow-hidden border border-gray-100 flex flex-col">
+        <!-- Header Section -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-2 border-b border-gray-200 flex-shrink-0">
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <h2 class="text-sm font-bold text-gray-800 mb-0.5">${gameData.title}</h2>
+                    <p class="text-gray-600 text-xs">${gameData.instructions || 'Look at the four pictures and guess the word they have in common!'}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    ${gameData.timeChallenge ? `<div id="timerDisplay" class="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium">⏱️ <span id="timerText">${Math.floor(gameData.timeLimit / 60)}:${(gameData.timeLimit % 60).toString().padStart(2, '0')}</span></div>` : ''}
+                    <span id="progress" class="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium">Item 1 of ${gameData.items.length}</span>
+                    <button id="aboutBtn" class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs font-medium hover:bg-gray-200 transition-all">About</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div class="flex-1 p-3 flex flex-col min-h-0">
+            <!-- Pictures Section (Top) -->
+            <div class="mb-2 flex-shrink-0">
+                <div id="picturesGrid" class="flex gap-3 justify-center max-w-4xl mx-auto"></div>
+            </div>
+            
+            <!-- Game Controls (Bottom) -->
+            <div class="flex-1 flex flex-col justify-center space-y-2 min-h-0">
+                <!-- Word Input -->
+                <div class="text-center">
+                    <h3 class="text-lg font-bold text-gray-700 mb-2">${t.yourAnswer}</h3>
+                    <div id="wordInput" class="flex justify-center gap-2 mb-2"></div>
+                </div>
+                
+                <!-- Letter Bank -->
+                <div class="text-center">
+                    <h3 class="text-lg font-semibold text-gray-600 mb-2">${t.availableLetters}</h3>
+                    <div id="letterBank" class="flex flex-wrap justify-center gap-2 mb-2"></div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex justify-center gap-2">
+                    <button id="clearBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium border border-gray-200 transition-all">${t.clear}</button>
+                    <button id="checkBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-all">${t.check}</button>
+                    <button id="resetBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium transition-all">${t.reset}</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer Controls -->
+        <div class="bg-gray-50 p-2 flex justify-between items-center border-t border-gray-200 flex-shrink-0">
+            <button id="prevBtn" class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all" disabled>${t.previous}</button>
+            <div id="result" class="text-center font-medium hidden text-xs"></div>
+            <button id="nextBtn" class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all" disabled>${t.next}</button>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 modal hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-4 max-w-md w-full mx-4 shadow-lg border border-gray-100">
+            <div class="text-center">
+                <!-- Celebration Animation -->
+                <div class="text-4xl mb-2 animate-bounce">🎉</div>
+                <h3 id="successTitle" class="text-lg font-bold text-gray-800 mb-2">${t.activityCompleted}</h3>
+                <p id="successSubtitle" class="text-gray-600 mb-4 text-sm">${t.excellentWork}</p>
+                
+                <!-- Results Section -->
+                <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-3 mb-4 border border-green-200">
+                    <h4 id="resultsTitle" class="text-sm font-semibold text-gray-800 mb-3">${t.yourResults}</h4>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span id="totalQuestionsLabel" class="text-gray-600">${t.totalQuestions}</span>
+                            <span id="totalQuestionsValue" class="font-semibold text-gray-800">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span id="correctAnswersLabel" class="text-gray-600">${t.correctAnswers}</span>
+                            <span id="correctAnswersValue" class="font-semibold text-green-600">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span id="accuracyLabel" class="text-gray-600">${t.accuracy}</span>
+                            <span id="accuracyValue" class="font-semibold text-blue-600">100%</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span id="timeTakenLabel" class="text-gray-600">${t.timeTaken}</span>
+                            <span id="timeTakenValue" class="font-semibold text-purple-600">0:00</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span id="averageTimeLabel" class="text-gray-600">${t.averagePerQuestion}</span>
+                            <span id="averageTimeValue" class="font-semibold text-orange-600">0:00</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex gap-2 justify-center">
+                    <button id="playAgainBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-sm font-medium">
+                        ${t.playAgain}
+                    </button>
+                    <button id="closeSuccessBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium border border-gray-200">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        const gameData = ${JSON.stringify(gameData)};
+        const translations = {
+            english: {
+                yourAnswer: "Your Answer:",
+                availableLetters: "Available Letters:",
+                clear: "🗑️ Clear",
+                check: "✓ Check",
+                reset: "🔄 Reset",
+                previous: "← Previous",
+                next: "Next →",
+                alreadyCompleted: "✅ Already completed!",
+                fillAllLetters: "⚠️ Please fill in all letters!",
+                correct: "🎉 Correct!",
+                tryAgain: "❌ Wrong answer!",
+                congratulations: "🏆 Congratulations! All puzzles completed!",
+                gameReset: "🔄 Game reset! Start fresh!",
+                timeUp: "⏰ Time's up!",
+                completed: "completed",
+                activityCompleted: "Activity Completed!",
+                excellentWork: "Great job completing the activity!",
+                yourResults: "Your Results:",
+                totalQuestions: "Total Questions:",
+                correctAnswers: "Correct Answers:",
+                accuracy: "Accuracy:",
+                timeTaken: "Time Taken:",
+                averagePerQuestion: "Average per Question:",
+                playAgain: "Play Again",
+                close: "Close",
+                minute: "minute",
+                minutes: "minutes",
+                second: "second",
+                seconds: "seconds"
+            },
+            filipino: {
+                yourAnswer: "Inyong Sagot:",
+                availableLetters: "Mga Available na Titik:",
+                clear: "🗑️ Linisin",
+                check: "✓ Tignan",
+                reset: "🔄 Ulitin",
+                previous: "← Nakaraan",
+                next: "Susunod →",
+                alreadyCompleted: "✅ Tapos na!",
+                fillAllLetters: "⚠️ Punan lahat ng titik!",
+                correct: "🎉 Tama!",
+                tryAgain: "❌ Maling sagot!",
+                congratulations: "🏆 Binabati kita! Lahat ng puzzle ay natapos!",
+                gameReset: "🔄 Na-reset ang laro! Magsimula ulit!",
+                timeUp: "⏰ Tapos na ang oras!",
+                completed: "tapos",
+                activityCompleted: "Tapos na ang Aktibidad!",
+                excellentWork: "Magaling! Natapos mo ang aktibidad!",
+                yourResults: "Inyong mga Resulta:",
+                totalQuestions: "Kabuuang Tanong:",
+                correctAnswers: "Tamang Sagot:",
+                accuracy: "Katumpakan:",
+                timeTaken: "Oras na Ginugol:",
+                averagePerQuestion: "Average bawat Tanong:",
+                playAgain: "Maglaro Ulit",
+                close: "Isara",
+                minute: "minuto",
+                minutes: "minuto",
+                second: "segundo",
+                seconds: "segundo"
+            }
+        };
+        const currentLanguage = '${language}';
+        const t = translations[currentLanguage];
+        
+        let currentItemIndex = 0;
+        let currentAnswer = '';
+        let completedItems = new Set();
+        let timer = null;
+        let timeRemaining = ${gameData.timeLimit || 0};
+        let gameStartTime = null;
+        let gameEndTime = null;
+        let correctAnswers = 0;
+        
+        function init() {
+            gameStartTime = Date.now();
+            loadItem(0);
+            ${gameData.timeChallenge ? 'startTimer();' : ''}
+        }
+        
+        function startTimer() {
+            if (!${gameData.timeChallenge} || timeRemaining <= 0) return;
+            
+            updateTimerDisplay();
+            timer = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(timer);
+                    showResult(t.timeUp, 'text-red-600');
+                    document.querySelectorAll('.letter-btn').forEach(btn => btn.disabled = true);
+                    document.getElementById('checkBtn').disabled = true;
+                }
+            }, 1000);
+        }
+        
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            const timerText = document.getElementById('timerText');
+            if (timerText) {
+                timerText.textContent = minutes + ':' + seconds.toString().padStart(2, '0');
+            }
+        }
+        
+        function loadItem(index) {
+            currentItemIndex = index;
+            currentAnswer = '';
+            const item = gameData.items[index];
+            
+            document.getElementById('progress').textContent = 'Item ' + (index + 1) + ' of ' + gameData.items.length;
+            
+            // Load pictures with same layout as play tab
+            document.getElementById('picturesGrid').innerHTML = item.pictures.map((pic, i) => 
+                '<div class="w-48 h-48 bg-gray-100 rounded-lg overflow-hidden shadow-lg border-2 border-gray-300">' +
+                '<img src="' + pic + '" alt="Picture ' + (i + 1) + '" class="w-full h-full object-cover">' +
+                '</div>'
+            ).join('');
+            
+            // Create word input boxes
+            document.getElementById('wordInput').innerHTML = 
+                '<div class="flex justify-center gap-2">' +
+                Array(item.answer.length).fill(0).map((_, i) => 
+                    '<div class="letter-box" data-index="' + i + '"></div>'
+                ).join('') +
+                '</div>';
+            
+            // Create letter bank
+            const letters = item.answer.split('').concat(generateExtraLetters(6));
+            const shuffledLetters = shuffleArray(letters);
+            document.getElementById('letterBank').innerHTML = shuffledLetters.map(letter => 
+                '<button class="letter-btn" data-letter="' + letter + '">' + letter + '</button>'
+            ).join('');
+            
+            bindEvents();
+            updateNavigation();
+            
+            // If already completed, show the answer
+            if (completedItems.has(index)) {
+                document.querySelectorAll('.letter-box').forEach((box, i) => {
+                    box.textContent = item.answer[i];
+                    box.classList.add('filled', 'correct');
+                });
+                currentAnswer = item.answer;
+            }
+        }
+        
+        function generateExtraLetters(count) {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const extras = [];
+            for (let i = 0; i < count; i++) {
+                extras.push(alphabet[Math.floor(Math.random() * alphabet.length)]);
+            }
+            return extras;
+        }
+        
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+        
+        function bindEvents() {
+            document.querySelectorAll('.letter-btn').forEach(btn => {
+                btn.onclick = () => addLetter(btn.dataset.letter, btn);
+                // Add touch support for better mobile experience
+                btn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    addLetter(btn.dataset.letter, btn);
+                });
+            });
+            
+            document.querySelectorAll('.letter-box').forEach(box => {
+                box.onclick = () => removeLetter(box);
+                // Add touch support for better mobile experience
+                box.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    removeLetter(box);
+                });
+            });
+            
+            document.getElementById('clearBtn').onclick = clearAnswer;
+            document.getElementById('checkBtn').onclick = checkAnswer;
+            document.getElementById('resetBtn').onclick = resetGame;
+            document.getElementById('prevBtn').onclick = () => loadItem(currentItemIndex - 1);
+            document.getElementById('nextBtn').onclick = () => loadItem(currentItemIndex + 1);
+            document.getElementById('aboutBtn').onclick = showAboutModal;
+            document.getElementById('closeAboutBtn').onclick = closeAboutModal;
+            document.getElementById('playAgainBtn').onclick = playAgain;
+            document.getElementById('closeSuccessBtn').onclick = closeSuccessModal;
+        }
+        
+
+        
+        function showAboutModal() {
+            document.getElementById('aboutModal').classList.remove('hidden');
+            document.getElementById('aboutModal').classList.add('flex');
+        }
+        
+        function closeAboutModal() {
+            document.getElementById('aboutModal').classList.add('hidden');
+            document.getElementById('aboutModal').classList.remove('flex');
+        }
+        
+        function addLetter(letter, btn) {
+            if (completedItems.has(currentItemIndex)) return;
+            if (btn.classList.contains('used')) return;
+            
+            const emptyBox = document.querySelector('.letter-box:not(.filled)');
+            if (!emptyBox) return;
+            
+            // Add haptic feedback for mobile
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+            
+            // Smooth placement animation
+            emptyBox.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            emptyBox.textContent = letter;
+            emptyBox.classList.add('filled');
+            emptyBox.dataset.letter = letter;
+            
+            // Mark button as used instead of hiding
+            btn.classList.add('used');
+            btn.disabled = true;
+            
+            currentAnswer += letter;
+            
+            // Enhanced visual feedback with bounce
+            emptyBox.style.transform = 'scale(1.2)';
+            emptyBox.style.backgroundColor = '#dcfce7';
+            emptyBox.style.borderColor = '#10b981';
+            
+            setTimeout(() => {
+                emptyBox.style.transform = 'scale(1)';
+                setTimeout(() => {
+                    emptyBox.style.transition = '';
+                    emptyBox.style.backgroundColor = '';
+                    emptyBox.style.borderColor = '';
+                }, 300);
+            }, 150);
+        }
+        
+        function removeLetter(box) {
+            if (completedItems.has(currentItemIndex) || !box.classList.contains('filled')) return;
+            
+            const letter = box.dataset.letter;
+            
+            // Add haptic feedback for mobile
+            if (navigator.vibrate) {
+                navigator.vibrate(30);
+            }
+            
+            // Clear the box
+            box.textContent = '';
+            box.classList.remove('filled', 'correct', 'wrong');
+            delete box.dataset.letter;
+            
+            // Re-enable the corresponding button
+            const btn = document.querySelector('.letter-btn[data-letter="' + letter + '"].used');
+            if (btn) {
+                btn.classList.remove('used');
+                btn.disabled = false;
+            }
+            
+            currentAnswer = currentAnswer.replace(letter, '');
+        }
+        
+        function clearAnswer() {
+            if (completedItems.has(currentItemIndex)) return;
+            
+            // Re-enable all used buttons
+            document.querySelectorAll('.letter-btn.used').forEach(btn => {
+                btn.classList.remove('used');
+                btn.disabled = false;
+            });
+            
+            // Clear all filled boxes
+            document.querySelectorAll('.letter-box.filled').forEach(box => {
+                box.textContent = '';
+                box.classList.remove('filled', 'correct', 'wrong');
+                delete box.dataset.letter;
+            });
+            
+            currentAnswer = '';
+        }
+        
+        function checkAnswer() {
+            if (completedItems.has(currentItemIndex)) {
+                showResult(t.alreadyCompleted, 'text-green-600');
+                return;
+            }
+            
+            const item = gameData.items[currentItemIndex];
+            
+            if (currentAnswer.length !== item.answer.length) {
+                showResult(t.fillAllLetters, 'text-yellow-600');
+                return;
+            }
+            
+            if (currentAnswer === item.answer) {
+                // Correct answer
+                document.querySelectorAll('.letter-box').forEach(box => box.classList.add('correct'));
+                completedItems.add(currentItemIndex);
+                correctAnswers++;
+                showResult(t.correct, 'text-green-600');
+                
+                // Auto-advance after 1.5 seconds
+                setTimeout(() => {
+                    if (currentItemIndex < gameData.items.length - 1) {
+                        loadItem(currentItemIndex + 1);
+                    } else {
+                        // All questions completed - show success modal
+                        gameEndTime = Date.now();
+                        if (timer) clearInterval(timer);
+                        showSuccessModal();
+                    }
+                }, 1500);
+            } else {
+                // Wrong answer
+                document.querySelectorAll('.letter-box').forEach(box => box.classList.add('wrong'));
+                completedItems.add(currentItemIndex); // Mark as completed (wrong)
+                showResult(t.tryAgain, 'text-red-600');
+                
+                // Auto-advance after 1.5 seconds
+                setTimeout(() => {
+                    if (currentItemIndex < gameData.items.length - 1) {
+                        loadItem(currentItemIndex + 1);
+                    } else {
+                        // All questions completed - show success modal
+                        gameEndTime = Date.now();
+                        if (timer) clearInterval(timer);
+                        showSuccessModal();
+                    }
+                }, 1500);
+            }
+            
+            updateNavigation();
+        }
+        
+        function resetGame() {
+            completedItems.clear();
+            currentItemIndex = 0;
+            currentAnswer = '';
+            correctAnswers = 0;
+            gameStartTime = Date.now();
+            gameEndTime = null;
+            if (timer) clearInterval(timer);
+            timeRemaining = ${gameData.timeLimit || 0};
+            
+            document.querySelectorAll('.letter-btn').forEach(btn => btn.disabled = false);
+            document.getElementById('checkBtn').disabled = false;
+            
+            loadItem(0);
+            ${gameData.timeChallenge ? 'startTimer();' : ''}
+            showResult(t.gameReset, 'text-blue-600');
+        }
+        
+        function showSuccessModal() {
+            // Calculate statistics
+            const totalQuestions = gameData.items.length;
+            const accuracy = Math.round((correctAnswers / totalQuestions) * 100);
+            
+            // Calculate time taken
+            const timeTakenMs = gameEndTime - gameStartTime;
+            const timeTakenSeconds = Math.floor(timeTakenMs / 1000);
+            const minutes = Math.floor(timeTakenSeconds / 60);
+            const seconds = timeTakenSeconds % 60;
+            
+            // Calculate average time per question
+            const avgTimePerQuestionMs = timeTakenMs / totalQuestions;
+            const avgTimePerQuestionSeconds = Math.floor(avgTimePerQuestionMs / 1000);
+            const avgMinutes = Math.floor(avgTimePerQuestionSeconds / 60);
+            const avgSeconds = avgTimePerQuestionSeconds % 60;
+            
+            // Format time strings
+            const formatTime = (mins, secs) => {
+                if (mins > 0) {
+                    return secs > 0 ? mins + 'm ' + secs + 's' : mins + 'm';
+                } else {
+                    return secs + 's';
+                }
+            };
+            
+            // Update values
+            document.getElementById('totalQuestionsValue').textContent = totalQuestions;
+            document.getElementById('correctAnswersValue').textContent = correctAnswers;
+            document.getElementById('accuracyValue').textContent = accuracy + '%';
+            document.getElementById('timeTakenValue').textContent = formatTime(minutes, seconds);
+            document.getElementById('averageTimeValue').textContent = formatTime(avgMinutes, avgSeconds);
+            
+            // Show modal
+            document.getElementById('successModal').classList.remove('hidden');
+            document.getElementById('successModal').classList.add('flex');
+        }
+        
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.add('hidden');
+            document.getElementById('successModal').classList.remove('flex');
+        }
+        
+        function playAgain() {
+            closeSuccessModal();
+            resetGame();
+        }
+        
+        function showSuccessModal() {
+            // Calculate statistics
+            const totalQuestions = gameData.items.length;
+            const accuracy = Math.round((correctAnswers / totalQuestions) * 100);
+            
+            // Calculate time taken
+            const timeTakenMs = gameEndTime - gameStartTime;
+            const timeTakenSeconds = Math.floor(timeTakenMs / 1000);
+            const minutes = Math.floor(timeTakenSeconds / 60);
+            const seconds = timeTakenSeconds % 60;
+            
+            // Calculate average time per question
+            const avgTimePerQuestionMs = timeTakenMs / totalQuestions;
+            const avgTimePerQuestionSeconds = Math.floor(avgTimePerQuestionMs / 1000);
+            const avgMinutes = Math.floor(avgTimePerQuestionSeconds / 60);
+            const avgSeconds = avgTimePerQuestionSeconds % 60;
+            
+            // Format time strings with proper translations
+            const formatTime = (mins, secs) => {
+                if (mins > 0) {
+                    const minText = mins === 1 ? t.minute : t.minutes;
+                    const secText = secs === 1 ? t.second : t.seconds;
+                    return secs > 0 ? mins + ' ' + minText + ' ' + secs + ' ' + secText : mins + ' ' + minText;
+                } else {
+                    const secText = secs === 1 ? t.second : t.seconds;
+                    return secs + ' ' + secText;
+                }
+            };
+            
+            // Update modal content with translations
+            document.getElementById('successTitle').textContent = t.activityCompleted;
+            document.getElementById('successSubtitle').textContent = t.excellentWork;
+            document.getElementById('resultsTitle').textContent = t.yourResults;
+            document.getElementById('totalQuestionsLabel').textContent = t.totalQuestions;
+            document.getElementById('correctAnswersLabel').textContent = t.correctAnswers;
+            document.getElementById('accuracyLabel').textContent = t.accuracy;
+            document.getElementById('timeTakenLabel').textContent = t.timeTaken;
+            document.getElementById('averageTimeLabel').textContent = t.averagePerQuestion;
+            document.getElementById('playAgainBtn').textContent = t.playAgain;
+            document.getElementById('closeSuccessBtn').textContent = t.close;
+            
+            // Update values
+            document.getElementById('totalQuestionsValue').textContent = totalQuestions;
+            document.getElementById('correctAnswersValue').textContent = correctAnswers;
+            document.getElementById('accuracyValue').textContent = accuracy + '%';
+            document.getElementById('timeTakenValue').textContent = formatTime(minutes, seconds);
+            document.getElementById('averageTimeValue').textContent = formatTime(avgMinutes, avgSeconds);
+            
+            // Show modal
+            document.getElementById('successModal').classList.remove('hidden');
+            document.getElementById('successModal').classList.add('flex');
+        }
+        
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.add('hidden');
+            document.getElementById('successModal').classList.remove('flex');
+        }
+        
+        function playAgain() {
+            closeSuccessModal();
+            resetGame();
+        }
+        
+        function updateNavigation() {
+            document.getElementById('prevBtn').disabled = currentItemIndex === 0;
+            document.getElementById('nextBtn').disabled = currentItemIndex === gameData.items.length - 1;
+            
+            const progress = document.getElementById('progress');
+            progress.className = completedItems.has(currentItemIndex) 
+                ? 'bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium'
+                : 'bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium';
+        }
+        
+        function showResult(message, className) {
+            const result = document.getElementById('result');
+            result.textContent = message;
+            result.className = 'text-center font-medium ' + className + ' text-xs';
+            result.classList.remove('hidden');
+            setTimeout(() => result.classList.add('hidden'), 3000);
+        }
+        
+        // Disable right-click context menu
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+        
+        // Disable text selection with mouse drag
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+        });
+        
+        init();
+    <\/script>
+</body>
+</html>`;
+            }
+
+            showMessage(title, message) {
+                document.getElementById('messageTitle').textContent = title;
+                document.getElementById('messageText').textContent = message;
+                document.getElementById('messageModal').classList.remove('hidden');
+                document.getElementById('messageModal').classList.add('flex');
+            }
+
+            closeMessage() {
+                document.getElementById('messageModal').classList.add('hidden');
+                document.getElementById('messageModal').classList.remove('flex');
+            }
+
+            showSuccessModal() {
+                const t = this.translations[this.currentLanguage];
+                
+                // Calculate statistics
+                const totalQuestions = this.currentPlayingGame.items.length;
+                const correctAnswers = this.correctAnswers;
+                const accuracy = Math.round((correctAnswers / totalQuestions) * 100);
+                
+                // Calculate time taken
+                const timeTakenMs = this.gameEndTime - this.gameStartTime;
+                const timeTakenSeconds = Math.floor(timeTakenMs / 1000);
+                const minutes = Math.floor(timeTakenSeconds / 60);
+                const seconds = timeTakenSeconds % 60;
+                
+                // Calculate average time per question
+                const avgTimePerQuestionMs = timeTakenMs / totalQuestions;
+                const avgTimePerQuestionSeconds = Math.floor(avgTimePerQuestionMs / 1000);
+                const avgMinutes = Math.floor(avgTimePerQuestionSeconds / 60);
+                const avgSeconds = avgTimePerQuestionSeconds % 60;
+                
+                // Format time strings with proper translations
+                const formatTime = (mins, secs) => {
+                    if (mins > 0) {
+                        const minText = mins === 1 ? t.minute : t.minutes;
+                        const secText = secs === 1 ? t.second : t.seconds;
+                        return secs > 0 ? `${mins} ${minText} ${secs} ${secText}` : `${mins} ${minText}`;
+                    } else {
+                        const secText = secs === 1 ? t.second : t.seconds;
+                        return `${secs} ${secText}`;
+                    }
+                };
+                
+                // Update modal content with translations
+                document.getElementById('successTitle').textContent = t.activityCompleted;
+                document.getElementById('successSubtitle').textContent = t.excellentWork;
+                document.getElementById('resultsTitle').textContent = t.yourResults;
+                document.getElementById('totalQuestionsLabel').textContent = t.totalQuestions;
+                document.getElementById('correctAnswersLabel').textContent = t.correctAnswers;
+                document.getElementById('accuracyLabel').textContent = t.accuracy;
+                document.getElementById('timeTakenLabel').textContent = t.timeTaken;
+                document.getElementById('averageTimeLabel').textContent = t.averagePerQuestion;
+                document.getElementById('playAgainBtn').textContent = t.playAgain;
+                document.getElementById('closeSuccessBtn').textContent = t.close;
+                
+                // Update values
+                document.getElementById('totalQuestionsValue').textContent = totalQuestions;
+                document.getElementById('correctAnswersValue').textContent = correctAnswers;
+                document.getElementById('accuracyValue').textContent = accuracy + '%';
+                document.getElementById('timeTakenValue').textContent = formatTime(minutes, seconds);
+                document.getElementById('averageTimeValue').textContent = formatTime(avgMinutes, avgSeconds);
+                
+                // Show modal
+                document.getElementById('successModal').classList.remove('hidden');
+                document.getElementById('successModal').classList.add('flex');
+                
+                // Add confetti if perfect score
+                if (accuracy === 100) {
+                    this.createConfetti();
+                }
+            }
+
+            closeSuccessModal() {
+                document.getElementById('successModal').classList.add('hidden');
+                document.getElementById('successModal').classList.remove('flex');
+            }
+
+            playAgain() {
+                this.closeSuccessModal();
+                this.resetGame();
+            }
+        }
+
+        const app = new FourPicsWordMaker();
+        
+        // Disable right-click context menu
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+        
+        // Disable text selection with mouse drag
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97641c81e742bc33',t:'MTc1NjM4NzI4Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
